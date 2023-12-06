@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yyf.dao.UserDao" >
+    <select id="findByUsername"
+            parameterType="string"
+            resultType="com.yyf.pojo.User">
+        select * from user where username = #{username}
+    </select>
+    <select id="findByCondition" parameterType="string" resultType="com.yyf.pojo.User">
+        select * from (
+        select * from user u,teacher t,user_role ur
+        where u.id = t.uid and ur.user_id = u.id and ur.role_id = #{adminKind}
+        ) as ut
+        <where>
+            <if test="value != null and value.length >0">
+                and name like #{value} or username like #{value}
+            </if>
+        </where>
+    </select>
+    <insert id="add" parameterType="com.yyf.pojo.User">
+        insert into user(username, password) values(#{username},#{password});
+    </insert>
+    <insert id="addRole" parameterType="int">
+        insert into user_role(user_id, role_id) VALUES (#{userId},#{roleId});
+    </insert>
+    <delete id="delete" parameterType="int">
+        delete from user where id = #{id};
+    </delete>
+
+    <delete id="deleteRole" parameterType="int">
+        delete from user_role where user_id = #{id};
+    </delete>
+    
+    <update id="changePassword" >
+        update user set password=#{password} where id=#{id}
+    </update>
+    <select id="getUserNum" resultType="int">
+        select count(*)
+        from user_role
+        where role_id = #{roleId}
+    </select>
+</mapper>

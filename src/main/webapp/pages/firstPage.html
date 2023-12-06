@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+
+    <link rel="stylesheet" href="../plugins/elementui/index.css">
+    <link rel="stylesheet" href="../plugins/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="shortcut icon" type="image/x-icon" href="../img/dutOpen.png">
+</head>
+<body class="hold-transition" style="display: none">
+<div class="box">
+
+    <div id="app" v-loading="loading">
+        <div class="app-container">
+            <el-row >
+                <el-col :span="12">
+                    <div class="box1" style="height:440px;">
+                        <el-row>
+                            <span style="color: #3c8dbc;font-weight: bold;font-size: 20px;border-bottom: 3px solid #3c8dbc;">积分排名（当前排名：{{rank}}）</span>
+                        </el-row>
+                        <el-row>
+                            <div id="chart2" style="height:400px;"></div>
+
+                        </el-row>
+                    </div>
+
+                </el-col>
+                <el-col :span="12">
+                    <div class="box1" style="height: 440px">
+                        <el-row>
+                            <span style="color: #3c8dbc;font-weight: bold;font-size: 20px;border-bottom: 3px solid #3c8dbc;">分数构成（当前总分：{{currentTeacher.creditSum}}）</span>
+                        </el-row>
+                        <el-row>
+                            <div id="chart1" style="height:400px;"></div>
+                        </el-row>
+
+                    </div>
+                </el-col>
+            </el-row>
+            <el-row>
+                <div class="box1">
+                    <div id="chart3" style="height:400px;"></div>
+                </div>
+            </el-row>
+        </div>
+    </div>
+</div>
+</body>
+<script src="../js/vue.js"></script>
+<script src="../plugins/elementui/index.js"></script>
+<script type="text/javascript" src="../js/jquery.min.js"></script>
+<script src="../js/axios-0.18.0.js"></script>
+<script src="../plugins/echarts/echarts.js"></script>
+<script type="text/javascript">
+    window.onload = function(){
+        $('body').css('display','block')
+    }
+
+</script>
+<script>
+    var vue = new Vue({
+        el: '#app',
+        data:{
+            currentTeacher:{},
+            item:["教学评价","科研评价","人才荣誉","平台团队","国际化","学术兼职"],
+            rank:'',
+            loading:true
+        },
+        //钩子函数，VUE对象初始化完成后自动执行
+        created() {
+            axios.get('/user/getTeacher.do').then((response)=>{
+                this.currentTeacher = response.data.data;
+                axios.get('/teacher/findRank.do?Credit='+this.currentTeacher.creditSum).then((res)=>{
+                    this.rank = res.data.data;
+                });
+                this.initCharts();
+                this.initBarChart();
+                this.loading = false;
+
+            });
+
+
+        },
+        methods: {
+            initCharts(){
+                var myChart1 = echarts.init(document.getElementById('chart1'));
+                axios.get("/report/getPieReport.do?teacherUid="+this.currentTeacher.uid).then((res)=>{
+                    myChart1.setOption({
+
+                        color: ['rgba(84,170,173,0.5)', '#5470c6', '#77accd', '#65e3ef', '#f9c956', '#75bedc','#3c8dbc'],
+                        tooltip : {//提示框组件
+                            trigger: 'item',//触发类型，在饼形图中为item
+                            formatter: "{a} <br/>{b} : {c} ({d}%)"//提示内容格式
+                        },
+
+                        legend: {
+                            orient: 'vertical',
+                            left: 'left',
+                            data: res.data.data.sortNames
+                        },
+                        series : [
+                            {
+                                radius: ['30%', '55%'],
+                                name: '分数构成',
+                                type: 'pie',
+                                center: ['50%', '60%'],
+                                data:res.data.data.sortCount,
+                                itemStyle: {
+                                    borderColor: '#fff',
+                                    borderWidth: 2
+                                },
+                                emphasis: {
+                                    shadowBlur: 10,
+                                    shadowOffsetX: 0,
+                                    shadowColor: 'rgba(0, 0, 0, 0.5)'
+                                }
+                            }
+                        ]
+                    });
+                });
+            },
+            initBarChart(){
+                var currentTeacher = this.currentTeacher;
+                var myChart = echarts.init(document.getElementById('chart2'));
+                var myChart2 = echarts.init(document.getElementById('chart3'));
+                axios.get("/report/getTeacherCreditRank").then((res)=>{
+                    myChart.setOption({
+                        tooltip : {//提示框组件
+                            trigger: 'axis',
+                            axisPointer: {
+                                type: 'shadow'
+                            }
+                        },
+                        xAxis: {
+                            type: 'category',
+                            data: res.data.data.teacherNames
+                        },
+                        yAxis: {
+                            type: 'value'
+                        },
+                        series: [
+                            {
+                                type: 'bar',
+                                data: res.data.data.teacherCredit,
+                                itemStyle: {
+                                    normal: {
+                                        color: function(params) {
+                                            var index_color = params.name;
+                                            if(index_color === currentTeacher.name){
+                                                return '#91cc75';
+                                            }else {
+                                                return '#73c0de';
+                                            }
+                                        }
+                                    }
+                                },
+                                showBackground: true,
+                                backgroundStyle: {
+                                    color: 'rgba(180, 180, 180, 0.2)'
+                                }
+                            }
+
+                        ],
+                        dataZoom : [
+                            {
+                                type: 'slider',
+                                show: true,
+                                start: 0,
+                                end: 20,
+                                xAxisIndex: [0],
+                            },
+                        ]
+
+                    });
+                    myChart2.setOption({
+                        color: ['rgba(84,170,173,0.5)', '#5470c6', '#77accd', '#65e3ef', '#f9c956', '#75bedc','#3c8dbc'],
+
+                        tooltip: {
+                            trigger: 'axis',
+                            axisPointer: {
+                                type: 'shadow'
+                            }
+                        },
+                        legend: {
+                            data: this.item
+                        },
+                        xAxis: {
+                            type: 'value'
+                        },
+                        yAxis: {
+                            type: 'category',
+                            data: res.data.data.teacherNames
+                        },
+                        dataZoom : [
+                            {
+                                type: 'slider',
+                                show: true,
+                                start: 0,
+                                end: 20,
+                                yAxisIndex: [0],
+                            },
+                        ],
+                        series: [
+                            {
+                                name: this.item[0],
+                                type: 'bar',
+                                stack: '总量',
+                                label: {
+                                    show: true,
+                                    position: 'inside'
+                                },
+                                data: res.data.data.sort1
+                            },
+                            {
+                                name: this.item[1],
+                                type: 'bar',
+                                stack: '总量',
+                                label: {
+                                    show: true,
+                                    position: 'inside'
+                                },
+                                data: res.data.data.sort2
+                            },
+                            {
+                                name: this.item[2],
+                                type: 'bar',
+                                stack: '总量',
+                                label: {
+                                    show: true,
+                                    position: 'inside'
+                                },
+                                data: res.data.data.sort3
+                            },
+                            {
+                                name: this.item[3],
+                                type: 'bar',
+                                stack: '总量',
+                                label: {
+                                    show: true,
+                                    position: 'inside'
+                                },
+                                data: res.data.data.sort4
+                            },
+                            {
+                                name: this.item[4],
+                                type: 'bar',
+                                stack: '总量',
+                                label: {
+                                    show: true,
+                                    position: 'inside'
+                                },
+                                data: res.data.data.sort5
+                            },
+                            {
+                                name: this.item[5],
+                                type: 'bar',
+                                stack: '总量',
+                                label: {
+                                    show: true,
+                                    position: 'inside'
+                                },
+                                data: res.data.data.sort6
+                            }
+                        ]
+                    });
+                });
+            },
+
+        }
+    })
+</script>
+</html>

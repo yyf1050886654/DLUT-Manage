@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yyf.dao.TeacherAwardDao">
+    <select id="findByCondition" resultType="com.yyf.pojo.TeacherAwards">
+        select ta.id,awardsId,projectName,weight,beginDate,endDate,credit,ta.info,realCredit,zip,rankPosition
+        from teacher_awards ta,awards a
+        <where>
+            ta.teacherUid = #{teacherUid} and ta.awardsId = a.id and a.sort = #{sort}
+            <if test="value != null and value.length > 0">
+                and a.awardName like #{value}
+            </if>
+        </where>
+
+    </select>
+    <select id="findByCondition4All" resultType="com.yyf.pojo.TeacherAwards">
+        select ta.id,awardsId,teacherUid,projectName,weight,beginDate,endDate,credit,ta.info,realCredit,zip,rankPosition
+        from teacher_awards ta,awards a,teacher t
+        <where>
+            ta.awardsId = a.id and a.sort = #{sort} and t.uid = ta.teacherUid
+            <if test="value != null and value.length > 0">
+                and t.name like #{value}
+            </if>
+        </where>
+
+    </select>
+    <select id="manageFindByCondition" resultType="com.yyf.pojo.TeacherAwards">
+        select ta.*
+        from teacher_awards ta,teacher t,awards a
+        <where>
+            ta.teacherUid = t.uid and ta.awardsId = a.id
+            <if test="value != null and value.length > 0">
+                and t.name = #{value} or a.awardName = #{value}
+            </if>
+        </where>
+
+    </select>
+    <insert id="add" parameterType="com.yyf.pojo.TeacherAwards">
+        insert into teacher_awards(id, awardsid, teacheruid, projectname, info, begindate, enddate,realCredit,zip,rankPosition,weight)
+        values
+            (#{id},#{awardsId},#{teacherUid},#{projectName},#{info},#{beginDate},#{endDate},#{realCredit},#{zip},#{rankPosition},#{weight})
+    </insert>
+    <delete id="deleteById" parameterType="int">
+        delete from teacher_awards where id = #{id}
+    </delete>
+    
+    <select id="findZipNameById" resultType="string">
+        select zip
+        from teacher_awards where id = #{id}
+    </select>
+    
+    <select id="sortXSum" resultType="string">
+        select sum(ta.realCredit) from teacher_awards ta,awards a
+        where a.sort=#{sort} and teacherUid =#{teacherUid} and a.id = ta.awardsId
+    </select>
+    <select id="findAwardsByTeacherAndSorts" resultType="com.yyf.pojo.TeacherAwards">
+        select ta.id,awardsId,teacherUid,projectName,weight,beginDate,endDate,credit,ta.info,realCredit,zip,rankPosition
+        from teacher_awards ta,awards a
+        where a.sort = #{sort} and ta.awardsId = a.id and teacherUid = #{teacherUid}
+    </select>
+    <select id="findById" parameterType="int" resultType="com.yyf.pojo.TeacherAwards">
+        select ta.id,awardsId,teacherUid,projectName,weight,beginDate,endDate,credit,ta.info,realCredit,zip,rankPosition
+        from teacher_awards ta,awards a where ta.id = #{id} and a.id = ta.awardsId
+    </select>
+    <update id="edit" parameterType="com.yyf.pojo.TeacherAwards">
+        update teacher_awards
+        <set>
+            <if test="weight != null">
+                weight = #{weight},
+            </if>
+            <if test="realCredit != null">
+                realCredit = #{realCredit},
+            </if>
+            <if test="projectName != null">
+                projectName = #{projectName},
+            </if>
+
+            <if test="beginDate != null">
+                beginDate = #{beginDate},
+            </if>
+            <if test="endDate != null">
+                endDate = #{endDate},
+            </if>
+            <if test="info != null">
+                info = #{info},
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+</mapper>

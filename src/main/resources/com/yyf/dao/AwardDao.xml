@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yyf.dao.AwardDao">
+    <insert id="add" parameterType="com.yyf.pojo.Awards">
+        insert into awards(id, sort, awardName, priceLevel, boolTemp, kind, credit, info)
+                      values
+        (#{id},#{sort},#{awardName},#{priceLevel},#{boolTemp},#{kind},#{credit},#{info})
+    </insert>
+
+    <!--根据条件查询-->
+    <select id="findByCondition" resultType="com.yyf.pojo.Awards">
+        select * from awards
+        <where>
+            sort = #{sort}
+            <if test="value != null and value.length > 0">
+                and awardName like #{value}
+            </if>
+        </where>
+
+    </select>
+
+    <select id="selectCountByAwardsId" parameterType="int" resultType="long">
+        select count(1) from teacher_awards where awardsId = #{awardsId}
+    </select>
+
+    <delete id="deleteById" parameterType="int">
+        delete from awards where id = #{id}
+    </delete>
+
+    <select id="findById" parameterType="int" resultType="com.yyf.pojo.Awards">
+        select * from awards where id = #{id}
+    </select>
+    <select id="findByKind" resultType="com.yyf.pojo.Awards">
+        select * from awards where sort = #{sort} and kind = #{kind}
+    </select>
+    <select id="findByKindUnique" resultType="string">
+        select distinct awardName from awards where sort = #{sort} and kind = #{kind}
+    </select>
+
+    <update id="edit" parameterType="com.yyf.pojo.Awards">
+        update awards
+        <set>
+            <if test="sort != null">
+                sort = #{sort},
+            </if>
+            <if test="awardName != null">
+                awardName = #{awardName},
+            </if>
+            <if test="priceLevel != null">
+                priceLevel = #{priceLevel},
+            </if>
+
+            <if test="boolTemp != null">
+                boolTemp = #{boolTemp},
+            </if>
+            <if test="kind != null">
+                kind = #{kind},
+            </if>
+            <if test="credit != null">
+                credit = #{credit},
+            </if>
+            <if test="info != null">
+                info = #{info},
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <select id="findAll" resultType="com.yyf.pojo.Awards">
+        select * from awards
+    </select>
+
+    <select id="findAwardsIdsByTeacherUId" parameterType="int" resultType="int">
+        select awardsId from teacher_awards where teacherUid = #{teacherUid}
+    </select>
+    <!--根据检查组id查询关联的检查项-->
+    <select id="findAwardsByTeacherUId" parameterType="int" resultType="com.yyf.pojo.Awards">
+        select * from awards where id in (select awardsId from teacher_awards where teacherUid = #{teacherUid})
+    </select>
+</mapper>

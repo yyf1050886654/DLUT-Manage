@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yyf.dao.ReportDao">
+    <select id="findSortCount" resultType="map">
+        select i.name as name,sum(realCredit) as value
+        from awards a,teacher_awards ta,item i
+        where a.id = ta.awardsId and ta.teacherUid = #{teacherUid} and i.kind = a.sort
+        group by i.name;
+    </select>
+
+    <select id="getTeacherCreditRank" resultType="map">
+        select name as name,creditSum as value
+        from teacher t,user_role ur
+        where t.uid = ur.user_id and ur.role_id = 2
+        order by creditSum desc
+    </select>
+    <select id="getRankList" resultType="double">
+        select creditSum as value
+        from teacher t,user_role ur
+        where t.uid = ur.user_id and ur.role_id = 2
+        order by creditSum desc
+    </select>
+
+</mapper>

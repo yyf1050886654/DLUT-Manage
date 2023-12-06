@@ -1,0 +1,35 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+                           http://www.springframework.org/schema/beans/spring-beans.xsd
+                           http://www.springframework.org/schema/context
+                           http://www.springframework.org/schema/context/spring-context.xsd
+                            http://www.springframework.org/schema/mvc
+                           http://www.springframework.org/schema/mvc/spring-mvc.xsd">
+    <!--配置包扫描-->
+    <context:component-scan base-package="com.yyf.controller"/>
+    <!--配置驱动，使注解生效-->
+    <mvc:annotation-driven/>
+    <!--配置静态资源访问-->
+    <mvc:default-servlet-handler/>
+    <!--配置资源视图控制器，添加页面跳转时的前后缀-->
+    <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <property name="prefix" value="/pages"/>
+        <property name="suffix" value=".html"/>
+    </bean>
+    <!-- 配置文件上传解析器 -->
+    <bean class="org.springframework.web.multipart.commons.CommonsMultipartResolver"/>
+    <!-- 配置异常解析器 -->
+    <bean class="org.springframework.web.servlet.handler.SimpleMappingExceptionResolver"/>
+    <!-- 配置文件上传解析器，id 是固定的 multipartResolver -->
+    <bean id="multipartResolver"
+          class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+        <property name="maxUploadSize" value="104857600" />
+        <property name="maxInMemorySize" value="4096" />
+        <property name="defaultEncoding" value="UTF-8"/>
+    </bean>
+
+    <import resource="spring-security.xml"></import>
+</beans>

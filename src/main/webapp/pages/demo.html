@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+
+    <link rel="stylesheet" href="../plugins/elementui/index.css">
+    <link rel="stylesheet" href="../plugins/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="shortcut icon" type="image/x-icon" href="../img/dutOpen.png">
+</head>
+<body class="hold-transition" style="display: none">
+    <div id="app">
+        <div class="content-header">
+            <h1>统计分析<small>业绩数据</small></h1>
+            <el-breadcrumb separator-class="el-icon-arrow-right" class="breadcrumb">
+                <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
+                <el-breadcrumb-item>统计分析</el-breadcrumb-item>
+                <el-breadcrumb-item>业绩数据</el-breadcrumb-item>
+            </el-breadcrumb>
+        </div>
+        <div class="app-container">
+            <div class="box" style="height: 900px">
+                <el-button @click="exportRankExcel">导出Excel</el-button>
+                    <el-button @click="handleDownLoad">导出详情</el-button>
+                <div class="excelTime">日期：{{reportData.reportDate}}</div>
+                <table class="exceTable" cellspacing="0" cellpadding="0">
+                    <tr>
+                        <td colspan="4" class="headBody">用户统计</td>
+                    </tr>
+                    <tr>
+                        <td width='20%' class="tabletrBg">教师人数</td>
+                        <td width='30%'>{{reportData.teacherNum}}</td>
+                        <td width='20%' class="tabletrBg">管理员人数</td>
+                        <td width='30%'>{{reportData.adminNum}}</td>
+                    </tr>
+                    <tr>
+                        <td colspan="4" class="headBody">积分统计</td>
+                    </tr>
+                    <tr>
+                        <td width='20%' class="tabletrBg">最高分</td>
+                        <td width='30%'>{{reportData.maxCredit}}</td>
+                        <td width='20%' class="tabletrBg">最低分</td>
+                        <td width='30%'>{{reportData.minCredit}}</td>
+                    </tr>
+                    <tr>
+                        <td width='20%' class="tabletrBg">平均分</td>
+                        <td width='30%'>{{reportData.averageCredit}}</td>
+                        <td width='20%' class="tabletrBg">中位数</td>
+                        <td width='30%'>{{reportData.middleCredit}}</td>
+                    </tr>
+
+                </table>
+            <el-row>
+                <div class="box1">
+                    <div id="chart" style="height:400px;"></div>
+                </div>
+            </el-row>
+
+            </div>
+        </div>
+
+
+
+</div>
+</body>
+<script src="../js/vue.js"></script>
+<script src="../plugins/elementui/index.js"></script>
+<script type="text/javascript" src="../js/jquery.min.js"></script>
+<script src="../js/axios-0.18.0.js"></script>
+<script src="../plugins/echarts/echarts.js"></script>
+<script type="text/javascript">
+    window.onload = function(){
+        $('body').css('display','block')
+    }
+
+</script>
+<script>
+    var vue = new Vue({
+        el: '#app',
+        data:{
+            currentTeacher:{},
+            item:["教学评价","科研评价","人才荣誉","平台团队","国际化","学术兼职"],
+            rank:'',
+            reportData:{
+                reportDate:null,
+                teacherNum:0,
+                adminNum:0,
+                maxCredit:0,
+                minCredit:0,
+                averageCredit:0,
+                middleCredit:0
+            },
+            checkedSorts:[1,2,3,4,5,6,7],
+            checkedTeachers:[]
+
+        },
+        //钩子函数，VUE对象初始化完成后自动执行
+        created() {
+
+            axios.get('/user/getTeacher.do').then((response)=>{
+                this.currentTeacher = response.data.data;
+                this.checkedTeachers = this.currentTeacher.uid;
+                axios.get('/report/getReportData.do').then((res)=>{
+                    this.reportData = res.data.data;
+                    this.initBarChart();
+                });
+            });
+
+        },
+        methods: {
+            exportRankExcel(){
+                window.location.href = '/report/rankExcel.do';
+            },
+            handleDownLoad(){
+                window.location.href = "/teacherAward/downLoadExcel.do?sorts="+this.checkedSorts+"&teachers="+this.checkedTeachers;
+            },
+            initBarChart(){
+                var myChart2 = echarts.init(document.getElementById('chart'));
+                axios.get("/report/getTeacherCreditRank").then((res)=>{
+                    myChart2.setOption({
+                        color: ['rgba(84,170,173,0.5)', '#5470c6', '#77accd', '#65e3ef', '#f9c956', '#75bedc','#3c8dbc'],
+
+                        tooltip: {
+                            trigger: 'axis',
+                            axisPointer: {
+                                type: 'shadow'
+                            }
+                        },
+                        legend: {
+                            data: this.item
+                        },
+                        xAxis: {
+                            type: 'value'
+                        },
+                        yAxis: {
+                            type: 'category',
+                            data: res.data.data.teacherNames
+                        },
+                        dataZoom : [
+                            {
+                                type: 'slider',
+                                show: true,
+                                start: 0,
+                                end: 20,
+                                yAxisIndex: [0],
+                            },
+                        ],
+                        series: [
+                            {
+                                name: this.item[0],
+                                type: 'bar',
+                                stack: '总量',
+                                label: {
+                                    show: true,
+                                    position: 'inside'
+                                },
+                                data: res.data.data.sort1
+                            },
+                            {
+                                name: this.item[1],
+                                type: 'bar',
+                                stack: '总量',
+                                label: {
+                                    show: true,
+                                    position: 'inside'
+                                },
+                                data: res.data.data.sort2
+                            },
+                            {
+                                name: this.item[2],
+                                type: 'bar',
+                                stack: '总量',
+                                label: {
+                                    show: true,
+                                    position: 'inside'
+                                },
+                                data: res.data.data.sort3
+                            },
+                            {
+                                name: this.item[3],
+                                type: 'bar',
+                                stack: '总量',
+                                label: {
+                                    show: true,
+                                    position: 'inside'
+                                },
+                                data: res.data.data.sort4
+                            },
+                            {
+                                name: this.item[4],
+                                type: 'bar',
+                                stack: '总量',
+                                label: {
+                                    show: true,
+                                    position: 'inside'
+                                },
+                                data: res.data.data.sort5
+                            },
+                            {
+                                name: this.item[5],
+                                type: 'bar',
+                                stack: '总量',
+                                label: {
+                                    show: true,
+                                    position: 'inside'
+                                },
+                                data: res.data.data.sort6
+                            }
+                        ]
+                    });
+                });
+            },
+
+        }
+    })
+</script>
+</html>
