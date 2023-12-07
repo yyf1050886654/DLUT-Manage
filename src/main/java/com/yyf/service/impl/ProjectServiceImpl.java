@@ -51,6 +51,8 @@ public class ProjectServiceImpl implements ProjectService {
             try {
                 position = calculatePosition((int) project.getRankPosition()-1,awards.getSort(),awards.getKind());
             }catch (java.lang.ArrayIndexOutOfBoundsException e){
+                String info = project.getInfo()+"\n排名超出限制，不计入分数";
+                temp.setInfo(info);
                 position = 0;
             }
             temp.setRankPosition(position);
